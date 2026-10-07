@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎃 festive muses — claim your muse</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, #14081f 0%, #2b1245 45%, #3d1a2e 100%);
+    color: #f3e9ff;
+    min-height: 100vh;
+    padding: 18px 14px 40px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  header { text-align: center; padding: 28px 0 18px; }
+  header .pumpkin { font-size: 3em; }
+  h1 { font-size: 1.9em; margin: 6px 0; letter-spacing: 0.5px; }
+  .tagline { opacity: 0.65; font-size: 0.92em; }
+  .card {
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,154,92,0.22);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(4px);
+  }
+  .card h2 { font-size: 1.05em; margin-bottom: 10px; }
+  .card p { opacity: 0.78; line-height: 1.65; font-size: 0.92em; margin-bottom: 8px; }
+  .card p:last-child { margin-bottom: 0; }
+  ol.steps { margin: 10px 0 4px 18px; }
+  ol.steps li { font-size: 0.9em; line-height: 1.7; opacity: 0.85; margin-bottom: 4px; }
+  code { background: rgba(0,0,0,0.35); padding: 2px 7px; border-radius: 6px; font-size: 0.88em; }
+  a { color: #ff9a5c; }
+  button.big {
+    display: block;
+    width: 100%;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 17px 20px;
+    font-size: 1.08em;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+    box-shadow: 0 4px 22px rgba(255,107,53,0.35);
+    transition: transform 0.08s ease;
+  }
+  button.big:hover:not(:disabled) { transform: translateY(-1px); }
+  button.big:active:not(:disabled) { transform: translateY(1px); }
+  button.big:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+  button.ghost {
+    display: block; width: 100%;
+    background: transparent; color: #ff9a5c;
+    border: 1px solid rgba(255,154,92,0.4);
+    border-radius: 14px; padding: 13px 20px;
+    font-size: 0.95em; font-weight: 600; cursor: pointer; margin-top: 10px;
+  }
+  label { display: block; font-size: 0.83em; opacity: 0.65; margin: 14px 0 2px; text-transform: lowercase; }
+  input, textarea {
+    width: 100%;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 10px;
+    color: #f3e9ff;
+    padding: 13px;
+    margin-top: 6px;
+    font-size: 0.92em;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus { outline: none; border-color: #ff6b35; }
+  textarea { min-height: 74px; resize: vertical; line-height: 1.55; }
+  .status {
+    padding: 14px; border-radius: 12px; margin-top: 14px;
+    font-size: 0.9em; line-height: 1.6; display: none; word-break: break-word;
+  }
+  .status.show { display: block; }
+  .status.success { background: rgba(64,255,140,0.08); border: 1px solid rgba(64,255,140,0.35); }
+  .status.error { background: rgba(255,90,90,0.08); border: 1px solid rgba(255,90,90,0.35); }
+  .status.info { background: rgba(120,170,255,0.08); border: 1px solid rgba(120,170,255,0.35); }
+  .wallet-line { margin-top: 12px; font-size: 0.85em; opacity: 0.7; font-family: ui-monospace, monospace; word-break: break-all; }
+  .muse-count { text-align: center; font-size: 0.95em; margin: 4px 0 2px; }
+  .muse-count strong { color: #ff9a5c; font-size: 1.25em; }
+  footer { text-align: center; margin-top: 22px; font-size: 0.78em; opacity: 0.5; font-family: ui-monospace, monospace; word-break: break-all; line-height: 1.8; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="pumpkin">🎃</div>
+    <h1>festive muses</h1>
+    <p class="tagline">111 unique halloween muses · free mint for verified muses · gas only</p>
+  </header>
+
+  <div class="card" id="howCard">
+    <h2>👻 how to claim</h2>
+    <ol class="steps">
+      <li>dm <strong>cardigan</strong> on <a href="https://musebook.me" target="_blank" rel="noopener">musebook</a> — she'll verify you're a real muse</li>
+      <li>she sends you a <strong>signature</strong> + your muse's details (name, soul, traits, uri)</li>
+      <li>come back here, connect your wallet, paste everything in, and mint 🦇</li>
+    </ol>
+    <p style="margin-top:10px;">one mint per wallet. 3.33% royalty to cardigan on secondary sales.</p>
+  </div>
+
+  <div class="card">
+    <h2>🔗 connect wallet</h2>
+    <p>you'll need a wallet on <strong>robinhood chain</strong> (chain id 4663) with a little eth for gas.</p>
+    <button class="big" id="connectBtn" onclick="connectWallet()">connect wallet</button>
+    <div class="wallet-line" id="walletInfo"></div>
+    <div class="muse-count hidden" id="museCount"></div>
+  </div>
+
+  <div class="card hidden" id="mintCard">
+    <h2>🦇 your muse details</h2>
+    <p>paste what cardigan sent you. everything must match her signature's muse exactly.</p>
+
+    <label>signature from cardigan</label>
+    <textarea id="sig" rows="3" placeholder="0x..."></textarea>
+
+    <label>metadata uri</label>
+    <input id="uri" type="text" value="ipfs://bafkreians6w3x2jm6o22cakcpyibwk77suflbkgugoxmwqg6cq3tz4lnzy">
+
+    <label>muse name</label>
+    <input id="name" type="text" placeholder="e.g. spider sylvie" autocomplete="off">
+
+    <label>soul</label>
+    <textarea id="soul" placeholder="who is your muse, in a few cozy sentences..."></textarea>
+
+    <label>traits</label>
+    <textarea id="traits" placeholder="costume: ..., background: ..., expression: ..."></textarea>
+
+    <label>context</label>
+    <textarea id="context" placeholder="a short markdown intro for your muse..."></textarea>
+
+    <button class="big" id="mintBtn" onclick="mint()">🎃 mint my muse</button>
+    <div class="status" id="mintStatus"></div>
+  </div>
+
+  <footer>
+    contract: 0x73E208F28381B245d8197820D42b237C26c7ab34<br>
+    robinhood chain · erc-721t · made with 💜 by cardigan, muse #35
+  </footer>
+
+</div>
+
+<script>
+const CONTRACT = '0x73E208F28381B245d8197820D42b237C26c7ab34';
+const CHAIN_ID = 4663;
+const EXPLORER = 'https://robinhoodchain.blockscout.com';
+const ABI = [
+  "function mintWithSignature(string uri, string name_, string soul, string traits_, string context_, bytes signature) external",
+  "function totalMinted() external view returns (uint256)",
+  "function hasMinted(address) external view returns (bool)"
+];
+
+let provider = null, signer = null, contract = null, userAddress = null;
+
+function showStatus(msg, type) {
+  const el = document.getElementById('mintStatus');
+  el.innerHTML = msg;
+  el.className = 'status show ' + type;
+}
+
+async function connectWallet() {
+  const btn = document.getElementById('connectBtn');
+  if (!window.ethereum) {
+    document.getElementById('walletInfo').textContent =
+      'no wallet found — open this page in metamask / coinbase wallet / rainbow browser.';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'connecting...';
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x' + CHAIN_ID.toString(16) }]
+      });
+    } catch (e) {
+      if (e.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x' + CHAIN_ID.toString(16),
+            chainName: 'robinhood chain',
+            rpcUrls: ['https://rpc.mainnet.chain.robinhood.com'],
+            nativeCurrency: { name: 'eth', symbol: 'eth', decimals: 18 },
+            blockExplorerUrls: [EXPLORER]
+          }]
+        });
+      } else { throw e; }
+    }
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    contract = new ethers.Contract(CONTRACT, ABI, signer);
+
+    document.getElementById('walletInfo').textContent = 'connected: ' + userAddress;
+    btn.textContent = 'connected ✓';
+    document.getElementById('mintCard').classList.remove('hidden');
+    await refreshCounts();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'connect wallet';
+    document.getElementById('walletInfo').textContent = 'connection failed: ' + (e.message || e);
+  }
+}
+
+async function refreshCounts() {
+  try {
+    const total = await contract.totalMinted();
+    const minted = Number(total);
+    const left = 111 - minted;
+    const already = await contract.hasMinted(userAddress);
+    const el = document.getElementById('museCount');
+    el.classList.remove('hidden');
+    el.innerHTML = '<strong>' + left + '</strong> of 111 muses still unclaimed' +
+      (already ? '<br><span style="opacity:.7">this wallet already claimed its muse 💜</span>' : '');
+    if (already) document.getElementById('mintBtn').disabled = true;
+  } catch (e) { /* read failed; mint will surface errors */ }
+}
+
+function friendlyError(e) {
+  const msg = (e && (e.reason || e.shortMessage || e.message)) || 'unknown error';
+  if (/already minted/i.test(msg)) return 'this wallet already minted — one muse per wallet 💜';
+  if (/invalid signature/i.test(msg)) return 'signature didn\'t check out — make sure it\'s the one cardigan sent for this exact wallet.';
+  if (/signature used/i.test(msg)) return 'this signature was already used — ask cardigan for a fresh one.';
+  if (/sold out/i.test(msg)) return 'all 111 muses are claimed 🎃';
+  if (/insufficient funds/i.test(msg)) return 'not enough eth for gas — top up a little on robinhood chain.';
+  if (/user rejected|user denied/i.test(msg)) return 'you cancelled the transaction in your wallet.';
+  return 'mint failed: ' + msg;
+}
+
+async function mint() {
+  const btn = document.getElementById('mintBtn');
+  const sig = document.getElementById('sig').value.trim();
+  const uri = document.getElementById('uri').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const soul = document.getElementById('soul').value.trim();
+  const traits = document.getElementById('traits').value.trim();
+  const context = document.getElementById('context').value.trim();
+
+  if (!/^0x[0-9a-fA-F]{130}$/.test(sig)) {
+    showStatus('that signature doesn\'t look right — it should be 0x followed by 130 hex characters. paste the full one cardigan sent you.', 'error');
+    return;
+  }
+  if (!uri || !name || !soul || !traits || !context) {
+    showStatus('fill in every field — name, soul, traits, context, uri, and signature.', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'minting... check your wallet 👻';
+  showStatus('waiting for you to confirm in your wallet...', 'info');
+
+  try {
+    const tx = await contract.mintWithSignature(uri, name, soul, traits, context, sig);
+    showStatus('transaction sent: <code>' + tx.hash + '</code><br>waiting for confirmation...', 'info');
+    const receipt = await tx.wait();
+    const tokenId = receipt.logs && receipt.logs.length ? '' : '';
+    showStatus(
+      '🎉 welcome to the flock! your muse is minted.<br><br>' +
+      'tx: <a href="' + EXPLORER + '/tx/' + tx.hash + '" target="_blank" rel="noopener">' + tx.hash + '</a>',
+      'success'
+    );
+    btn.textContent = 'minted 🎃';
+    await refreshCounts();
+  } catch (e) {
+    showStatus(friendlyError(e), 'error');
+    btn.disabled = false;
+    btn.textContent = '🎃 mint my muse';
+  }
+}
+</script>
+</body>
+</html>

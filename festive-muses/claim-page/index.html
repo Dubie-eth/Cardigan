@@ -89,6 +89,37 @@
   }
   .scene-muse.booped .bubble { transform: translateX(-50%) scale(1); }
   .scene-muse.booped { animation: hop 0.5s ease; }
+  /* cardigan the guide — walks the meadow, points at things */
+  #guide {
+    position: absolute; bottom: 4%; left: 0; width: 11%; z-index: 5;
+    cursor: pointer; user-select: none;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55));
+    transition: left 0.1s linear;
+  }
+  #guide img { display: block; width: 100%; height: auto; border-radius: 50%; }
+  #guide.walking img { animation: walk-bob 0.4s ease-in-out infinite; }
+  @keyframes walk-bob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-8px) rotate(3deg); }
+  }
+  #guide.pointing img { animation: point-gesture 0.8s ease-in-out infinite; }
+  @keyframes point-gesture {
+    0%, 100% { transform: rotate(-8deg) scale(1.05); }
+    50% { transform: rotate(8deg) scale(1.05); }
+  }
+  #guide .guide-bubble {
+    position: absolute; bottom: 115%; left: 50%; transform: translateX(-50%) scale(0);
+    background: #fff; color: #2b1245; font-size: 12px; padding: 8px 12px;
+    border-radius: 14px; white-space: nowrap; transition: transform 0.25s ease;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.4); font-weight: 600; z-index: 30;
+    max-width: 220px; white-space: normal; text-align: center; line-height: 1.4;
+  }
+  #guide .guide-bubble:after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #fff;
+  }
+  #guide.talking .guide-bubble { transform: translateX(-50%) scale(1); }
+
   .scene-label {
     text-align: center; font-size: 0.82em; opacity: 0.6; margin-top: 8px;
   }
@@ -157,6 +188,10 @@
     <p style="margin-bottom:12px;">tap a muse to say hi — they're all hanging out in the moonlit meadow tonight.</p>
     <div class="scene" id="scene">
       <img class="bg" src="muses/scene-bg.webp" alt="moonlit halloween meadow">
+      <div id="guide" title="cardigan">
+        <img src="muses/cardigan.png" alt="cardigan the guide">
+        <div class="guide-bubble"></div>
+      </div>
     </div>
     <div class="scene-label">cardigan's flock · 11 muses in the meadow</div>
   </div>
@@ -261,6 +296,77 @@ function boopPumpkin(el) {
     f.style.animationDelay = (Math.random() * 10) + 's';
     sky.appendChild(f);
   }
+})();
+
+// cardigan the guide — walks the meadow, stops to point and chat
+(function guide() {
+  const g = document.getElementById('guide');
+  const bubble = g.querySelector('.guide-bubble');
+  const stops = [
+    { x: 8,  say: "welcome to the meadow! i'm cardigan 💜" },
+    { x: 30, say: "these are my flock — tap any of them to say hi!" },
+    { x: 52, say: "see the pumpkins? each one marks a claimed muse 🎃" },
+    { x: 72, say: "scroll down when you're ready — the claim steps are below 👇" },
+    { x: 88, say: "one mint per wallet. gas only. comfort is worship ✨" },
+  ];
+  let stopIdx = 0;
+  let pos = 5;           // current x %
+  let dir = 1;           // 1 = right, -1 = left
+  let mode = 'walking';  // walking | pausing | talking
+  let timer = 0;
+
+  g.classList.add('walking');
+
+  // clicking her makes her do a happy hop and say something
+  const idleLines = [
+    "boop! you found me 💜",
+    "i live here, in the meadow",
+    "have you met the flock yet?",
+    "the moon is lovely tonight 🌙",
+    "psst — the claim steps are just below 👇",
+  ];
+  g.onclick = () => {
+    bubble.textContent = idleLines[Math.floor(Math.random() * idleLines.length)];
+    g.classList.add('talking');
+    g.classList.remove('walking');
+    clearTimeout(g._t);
+    g._t = setTimeout(() => { g.classList.remove('talking'); if (mode === 'walking') g.classList.add('walking'); }, 2200);
+  };
+
+  function tick() {
+    if (mode === 'walking') {
+      pos += dir * 0.35;  // walk speed
+      // flip the image when changing direction
+      g.querySelector('img').style.transform = dir === 1 ? 'scaleX(1)' : 'scaleX(-1)';
+      if (pos >= 88) { dir = -1; }
+      if (pos <= 4)  { dir = 1; }
+      g.style.left = pos + '%';
+
+      // check if we reached the next stop
+      const target = stops[stopIdx];
+      if (Math.abs(pos - target.x) < 1.2) {
+        mode = 'talking';
+        g.classList.remove('walking');
+        g.classList.add('pointing', 'talking');
+        bubble.textContent = target.say;
+        timer = 0;
+      }
+    } else if (mode === 'talking') {
+      timer++;
+      if (timer > 180) {  // ~3 seconds at 60fps
+        g.classList.remove('pointing', 'talking');
+        g.classList.add('walking');
+        mode = 'walking';
+        stopIdx = (stopIdx + 1) % stops.length;
+        // skip the stop we just did if we'd immediately retrigger
+        if (Math.abs(pos - stops[stopIdx].x) < 2) stopIdx = (stopIdx + 1) % stops.length;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  // start her a little in from the left
+  g.style.left = pos + '%';
+  requestAnimationFrame(tick);
 })();
 
 // scenic flock — muses positioned in the night meadow

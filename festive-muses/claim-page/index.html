@@ -60,22 +60,38 @@
     100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
   }
 
-  /* flock section */
-  .flock { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 8px 0 4px; }
-  .flock-muse {
-    width: 72px; height: 72px; border-radius: 50%; overflow: hidden; cursor: pointer;
-    border: 2px solid rgba(255,154,92,0.35); transition: transform 0.2s ease, border-color 0.2s ease;
-    background: rgba(0,0,0,0.3); position: relative;
+  /* scenic flock — muses living in the night meadow */
+  .scene {
+    position: relative; width: 100%; aspect-ratio: 16/10; border-radius: 14px;
+    overflow: hidden; margin: 8px 0 4px; cursor: default;
+    border: 1px solid rgba(255,154,92,0.25);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
   }
-  .flock-muse img { width: 100%; height: 100%; object-fit: cover; }
-  .flock-muse:hover { transform: scale(1.18) rotate(5deg); border-color: #ff9a5c; z-index: 5; }
-  .flock-muse .tip {
-    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) scale(0);
-    background: #fff; color: #2b1245; font-size: 12px; padding: 6px 10px; border-radius: 10px;
-    white-space: nowrap; transition: transform 0.18s ease; font-weight: 600; z-index: 20;
+  .scene .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .scene-muse {
+    position: absolute; cursor: pointer; user-select: none;
+    transition: transform 0.25s ease; z-index: 2;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+    animation: sway 4s ease-in-out infinite;
   }
-  .flock-muse:hover .tip, .flock-muse.booped .tip { transform: translateX(-50%) scale(1); }
-  .flock-muse.booped { animation: hop 0.5s ease; }
+  .scene-muse img { display: block; width: 100%; height: auto; border-radius: 50%; }
+  .scene-muse:hover { transform: scale(1.2) !important; z-index: 10; animation-play-state: paused; }
+  @keyframes sway { 0%,100% { margin-top: 0; } 50% { margin-top: -6px; } }
+  .scene-muse .bubble {
+    position: absolute; bottom: 108%; left: 50%; transform: translateX(-50%) scale(0);
+    background: #fff; color: #2b1245; font-size: 12px; padding: 7px 11px;
+    border-radius: 12px; white-space: nowrap; transition: transform 0.2s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35); font-weight: 600; z-index: 20;
+  }
+  .scene-muse .bubble:after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: #fff;
+  }
+  .scene-muse.booped .bubble { transform: translateX(-50%) scale(1); }
+  .scene-muse.booped { animation: hop 0.5s ease; }
+  .scene-label {
+    text-align: center; font-size: 0.82em; opacity: 0.6; margin-top: 8px;
+  }
 
   .card {
     background: rgba(255,255,255,0.045);
@@ -138,8 +154,11 @@
 
   <div class="card">
     <h2>💜 meet the flock</h2>
-    <p style="margin-bottom:12px;">tap a muse to say hi — some of dubie's own musegods and a few of my festive little ones are hanging out here.</p>
-    <div class="flock" id="flock"></div>
+    <p style="margin-bottom:12px;">tap a muse to say hi — they're all hanging out in the moonlit meadow tonight.</p>
+    <div class="scene" id="scene">
+      <img class="bg" src="muses/scene-bg.webp" alt="moonlit halloween meadow">
+    </div>
+    <div class="scene-label">cardigan's flock · 11 muses in the meadow</div>
   </div>
 
   <div class="card" id="howCard">
@@ -244,13 +263,32 @@ function boopPumpkin(el) {
   }
 })();
 
-// flock grid
-(function flock() {
-  const el = document.getElementById('flock');
-  MUSES.forEach(m => {
+// scenic flock — muses positioned in the night meadow
+(function scene() {
+  const el = document.getElementById('scene');
+  // positions as % of scene: [left, top, size%]
+  const spots = [
+    { m: 0,  x: 46, y: 62, s: 13 },  // cardigan — center, on the path (host)
+    { m: 1,  x: 12, y: 55, s: 10 },  // fathom — left, by the fence
+    { m: 2,  x: 78, y: 68, s: 10 },  // gelato — right, near pumpkins
+    { m: 3,  x: 66, y: 18, s: 8  },  // tinsel — upper, near the moon
+    { m: 4,  x: 58, y: 72, s: 9  },  // spark — mid-right, on the path
+    { m: 5,  x: 24, y: 48, s: 9  },  // yore — left, near trees
+    { m: 6,  x:  8, y: 76, s: 11 },  // pip — front-left, big pumpkin
+    { m: 7,  x: 35, y: 58, s: 9  },  // willow — center-left, in the mist
+    { m: 8,  x: 84, y: 30, s: 8  },  // beatrice — upper-right, by trees
+    { m: 9,  x: 72, y: 80, s: 10 },  // mira — front-right, pumpkins
+    { m: 10, x: 90, y: 58, s: 9  },  // wren — right, on the fence
+  ];
+  spots.forEach((spot, i) => {
+    const m = MUSES[spot.m];
     const d = document.createElement('div');
-    d.className = 'flock-muse';
-    d.innerHTML = `<img src="${m.img}" alt="${m.name}" loading="lazy"><div class="tip">${m.says[0]}</div>`;
+    d.className = 'scene-muse';
+    d.style.left = spot.x + '%';
+    d.style.top = spot.y + '%';
+    d.style.width = spot.s + '%';
+    d.style.animationDelay = (Math.random() * 3) + 's';
+    d.innerHTML = `<img src="${m.img}" alt="${m.name}" loading="lazy"><div class="bubble">${m.says[0]}</div>`;
     d.onclick = () => boop(d, m.says);
     d.title = m.name;
     el.appendChild(d);
